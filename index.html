@@ -395,7 +395,7 @@ $("csvBtn").onclick=async()=>{const m=$("monthSel2").value;const q=s=>'"'+String
 render();
 
 (async()=>{
- const API="PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+ const API="https://script.google.com/macros/s/AKfycbz5Bz-rGgQMC2pL4_mcRGK9op5zwy-nAkvxEEbV6hDMc5TXGg9ijY-3kvrjGHJeUDzO/exec";
  if(API.startsWith("PASTE")){$("who").textContent="Setup pending: add the Apps Script URL in index.html";return}
  const call=async body=>{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});const j=await r.json();if(!j.ok){const e=new Error(j.error||"error");e.code=j.code||"error";throw e}return j};
  let pin="";try{pin=localStorage.getItem("pcb_pin")||""}catch(e){}
