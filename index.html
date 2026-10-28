@@ -1,0 +1,440 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Office Petty Cash Book</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#2f43a8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Petty Cash">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martel:wght@700;800&family=Mukta:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column like a cash-book page — balance slip on top, tabs for entry / register / summary / settings. Stamp-ink blue on cool paper. */
+:root{
+  --bg:#eef1f5; --paper:#ffffff; --ink:#1b2140; --muted:#5d6584; --line:#d9dee8; --soft:#f5f7fb;
+  --accent:#2f43a8; --accent-ink:#ffffff; --accent-soft:#e3e7fa;
+  --ok:#1d7a4a; --ok-soft:#ddf2e6; --warn:#a86500; --warn-soft:#fbefd9; --bad:#b4322c; --bad-soft:#f9e1df;
+  --f-display:"Martel","Noto Serif Devanagari",Georgia,serif;
+  --f-body:"Mukta","Noto Sans Devanagari",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111426; --paper:#191d33; --ink:#e7eaf6; --muted:#9aa2c2; --line:#2c3252; --soft:#20253f;
+  --accent:#8b9cff; --accent-ink:#111426; --accent-soft:#272e57;
+  --ok:#5fd394; --ok-soft:#173726; --warn:#f0b257; --warn-soft:#3a2b12; --bad:#ff8a80; --bad-soft:#3d1c1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111426; --paper:#191d33; --ink:#e7eaf6; --muted:#9aa2c2; --line:#2c3252; --soft:#20253f;
+  --accent:#8b9cff; --accent-ink:#111426; --accent-soft:#272e57;
+  --ok:#5fd394; --ok-soft:#173726; --warn:#f0b257; --warn-soft:#3a2b12; --bad:#ff8a80; --bad-soft:#3d1c1c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;line-height:1.2}
+h1{font-size:1.45rem}
+h2{font-size:1.1rem}
+.hi{font-family:var(--f-body);font-weight:500;color:var(--muted);font-size:.85em}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.who{font-size:.8rem;color:var(--muted);text-align:right}
+.status-line{font-size:.85rem;color:var(--muted)}
+/* balance slip */
+.slip{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:18px 20px;display:grid;grid-template-columns:1.3fr 1fr;gap:14px 20px}
+.slip .label{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.slip .big{font-family:var(--f-num);font-size:2.1rem;font-weight:600;line-height:1.1}
+.slip .mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.slip .mini b{display:block;font-family:var(--f-num);font-size:1.05rem}
+.slip .bar{grid-column:1/-1;height:8px;background:color-mix(in srgb,var(--accent-ink) 25%,transparent);border-radius:99px;overflow:hidden}
+.slip .bar i{display:block;height:100%;background:var(--accent-ink);border-radius:99px}
+.slip .foot{grid-column:1/-1;font-size:.85rem;opacity:.9}
+@media (max-width:520px){.slip{grid-template-columns:1fr}}
+.alert{border-radius:10px;padding:10px 14px;font-size:.92rem;background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent)}
+.alert.bad{background:var(--bad-soft);color:var(--bad);border-color:color-mix(in srgb,var(--bad) 30%,transparent)}
+/* tabs */
+nav.tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav.tabs button{flex:0 0 auto;background:none;border:0;border-bottom:3px solid transparent;padding:8px 12px 7px;font:600 .95rem var(--f-body);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button .hi{display:block;font-size:.75rem}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px}
+/* form */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem;min-width:0}
+label.f .hi{font-weight:500}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:64px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.amount-in{font-family:var(--f-num);font-size:1.4rem;font-weight:600}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.cats button{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:99px;padding:6px 12px;font:500 .9rem var(--f-body);cursor:pointer}
+.cats button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1 1 140px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:8px;padding:10px;font:600 .92rem var(--f-body);cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.btn{border:0;border-radius:9px;padding:11px 18px;font:700 1rem var(--f-body);cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.sm{padding:6px 12px;font-size:.85rem}
+.btn.ok{background:var(--ok);color:var(--paper)}
+.btn.bad{background:var(--bad);color:var(--paper)}
+.btn.warn{background:var(--warn);color:var(--paper)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.flags{display:flex;gap:6px;flex-wrap:wrap}
+.flag{font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--warn-soft);color:var(--warn)}
+.flag.bad{background:var(--bad-soft);color:var(--bad)}
+.toast{font-weight:600;color:var(--ok)}
+.err{font-weight:600;color:var(--bad)}
+/* register */
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.toolbar select{width:auto}
+.ledger{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.item .t{font-weight:600}
+.item .meta{font-size:.82rem;color:var(--muted)}
+.item .amt{text-align:right;font-family:var(--f-num);font-weight:600}
+.item .amt .bal{display:block;font-size:.75rem;font-weight:500;color:var(--muted)}
+.item.fund .amt{color:var(--ok)}
+.item.rejected .t,.item.rejected .amt{text-decoration:line-through;color:var(--muted)}
+.item .actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.item .actions input{flex:1 1 180px;width:auto;padding:6px 10px;font-size:.9rem}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:5px;border:1.5px solid currentColor}
+.pill.pending{color:var(--muted)} .pill.approved{color:var(--ok)} .pill.rejected{color:var(--bad)} .pill.query{color:var(--warn)}
+.note{font-size:.85rem;background:var(--soft);border-radius:6px;padding:6px 10px}
+.opening{display:flex;justify-content:space-between;font-size:.88rem;padding:8px 12px;background:var(--soft);border-radius:8px}
+.linkbtn{background:none;border:0;color:var(--accent);font:600 .82rem var(--f-body);cursor:pointer;padding:0;text-decoration:underline}
+.empty{text-align:center;padding:28px 12px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--f-display);font-size:1.05rem;margin-bottom:4px}
+/* summary */
+.cat-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.cat-row .track{grid-column:1/-1;height:8px;background:var(--soft);border-radius:99px;overflow:hidden}
+.cat-row .track i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kv div{background:var(--soft);border-radius:8px;padding:10px 12px}
+.kv span{display:block;font-size:.78rem;color:var(--muted)}
+.kv b{font-family:var(--f-num);font-size:1.05rem}
+.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+/* bill viewer */
+.viewer{position:fixed;inset:0;background:color-mix(in srgb,#000 70%,transparent);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
+.viewer img{max-height:85vh;border-radius:8px;background:var(--paper)}
+.viewer button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px))}
+@media (prefers-reduced-motion:no-preference){.btn,.cats button,.seg button{transition:filter .15s}.btn:hover{filter:brightness(1.08)}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="firmTitle">Office Petty Cash</h1>
+      <div class="hi">कार्यालय खुदरा रोकड़ बही</div>
+    </div>
+    <div class="who"><div id="who">Connecting…</div><button class="btn sm" id="installBtn" hidden style="margin-top:6px">📲 Install App</button><div id="iosHint" class="small" hidden>iPhone: Share ⬆️ → "Add to Home Screen"</div></div>
+  </header>
+
+  <section class="slip" aria-label="Cash balance">
+    <div>
+      <div class="label">Cash in hand · हाथ में नकद</div>
+      <div class="big" id="cashInHand">₹ —</div>
+    </div>
+    <div class="mini">
+      <div><span class="label">Spent this month</span><b id="mSpent">₹0</b></div>
+      <div><span class="label">Pending approval</span><b id="mPending">0</b></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="floatBar" style="width:0%"></i></div>
+    <div class="foot" id="slipFoot">Imprest float ₹5,000</div>
+  </section>
+  <div id="alerts" class="flex" style="display:flex;flex-direction:column;gap:8px"></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="add" aria-selected="true">Add expense<span class="hi">खर्च लिखें</span></button>
+    <button role="tab" data-tab="register" aria-selected="false">Register<span class="hi">रजिस्टर</span></button>
+    <button role="tab" data-tab="summary" aria-selected="false">Summary<span class="hi">सारांश</span></button>
+    <button role="tab" data-tab="owner" aria-selected="false" id="ownerTab" hidden>Give cash &amp; rules<span class="hi">नकद दें / नियम</span></button>
+  </nav>
+
+  <!-- ADD EXPENSE -->
+  <section class="panel" id="tab-add">
+    <div class="grid2">
+      <label class="f">Date <span class="hi">तारीख</span><input type="date" id="eDate"></label>
+      <label class="f">Amount (₹) <span class="hi">रकम</span><input type="number" id="eAmount" class="amount-in" inputmode="decimal" min="1" step="1" placeholder="0"></label>
+    </div>
+    <div class="f" style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-weight:600;font-size:.9rem">What was it for? <span class="hi">किस लिए?</span></span>
+      <div class="cats" id="cats"></div>
+    </div>
+    <div class="grid2">
+      <label class="f">Paid to <span class="hi">किसको दिया (दुकान / व्यक्ति)</span><input type="text" id="ePaidTo" placeholder="e.g. Sharma Stationers"></label>
+      <label class="f">Details <span class="hi">विवरण</span><input type="text" id="eDetails" placeholder="e.g. 2 reams A4 paper"></label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-weight:600;font-size:.9rem">Bill / receipt <span class="hi">बिल मिला?</span></span>
+      <div class="seg" id="billSeg">
+        <button type="button" data-bill="yes" aria-pressed="true">Yes, bill taken · बिल है</button>
+        <button type="button" data-bill="no" aria-pressed="false">No bill · बिल नहीं</button>
+      </div>
+    </div>
+    <label class="f" id="photoWrap">Photo of bill <span class="hi">बिल की फोटो (ज़रूरी नहीं)</span><input type="file" id="ePhoto" accept="image/*"></label>
+    <div class="flags" id="eFlags"></div>
+    <div class="row">
+      <button class="btn" id="saveExp">Save expense · सेव करें</button>
+      <span id="saveMsg" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="panel" id="tab-register" hidden>
+    <div class="toolbar">
+      <h2>Cash register <span class="hi">रोकड़ रजिस्टर</span></h2>
+      <div class="row">
+        <select id="monthSel" aria-label="Month"></select>
+        <select id="statusSel" aria-label="Status filter">
+          <option value="all">All entries</option>
+          <option value="pending">Pending</option>
+          <option value="query">Query</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+    </div>
+    <div class="opening" id="opening"></div>
+    <div class="ledger" id="ledger"></div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="panel" id="tab-summary" hidden>
+    <div class="toolbar">
+      <h2>Monthly summary <span class="hi">मासिक सारांश</span></h2>
+      <div class="row"><select id="monthSel2" aria-label="Month"></select><button class="btn ghost sm" id="csvBtn" hidden>Download CSV</button></div>
+    </div>
+    <div class="kv" id="sumKv"></div>
+    <div id="sumCats" style="display:flex;flex-direction:column;gap:10px"></div>
+    <span id="csvMsg" class="small"></span>
+  </section>
+
+  <!-- OWNER -->
+  <section id="tab-owner" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="panel">
+      <h2>Give cash to peon <span class="hi">नकद दिया</span></h2>
+      <p class="small muted" id="replenishHint" style="margin:0"></p>
+      <div class="grid2">
+        <label class="f">Date<input type="date" id="fDate"></label>
+        <label class="f">Amount (₹)<input type="number" id="fAmount" class="amount-in" min="1" step="1"></label>
+      </div>
+      <label class="f">Note<input type="text" id="fNote" placeholder="e.g. Imprest top-up for October"></label>
+      <div class="row"><button class="btn" id="saveFund">Record cash given</button><span id="fundMsg" aria-live="polite"></span></div>
+    </div>
+    <div class="panel">
+      <h2>Spending rules</h2>
+      <div class="grid2">
+        <label class="f">Office name<input type="text" id="cFirm"></label>
+        <label class="f">Imprest float (₹)<input type="number" id="cFloat" min="0"></label>
+        <label class="f">Single expense limit (₹)<span class="hi">Above this needs prior permission</span><input type="number" id="cLimit" min="0"></label>
+        <label class="f">Bill compulsory above (₹)<input type="number" id="cBill" min="0"></label>
+        <label class="f">Low balance alert below (₹)<input type="number" id="cAlert" min="0"></label>
+        <label class="f">Monthly budget (₹)<span class="hi">0 = no budget</span><input type="number" id="cBudget" min="0"></label>
+      </div>
+      <div class="row"><button class="btn" id="saveCfg">Save rules</button><span id="cfgMsg" aria-live="polite"></span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Rules for petty cash <span class="hi">खुदरा रोकड़ के नियम</span></h2>
+    <ul class="rules" id="rulesList"></ul>
+  </section>
+</div>
+<div class="viewer" id="viewer" hidden><button class="btn sm" id="closeViewer">Close</button><img id="viewerImg" alt="Bill photo"></div>
+
+<script>
+(function(){
+const CATS=[
+ ["tea","Tea & refreshments","चाय-नाश्ता"],["stationery","Stationery","स्टेशनरी"],["courier","Courier & postage","कूरियर / डाक"],
+ ["travel","Local conveyance","आना-जाना / किराया"],["photocopy","Photocopy & printing","फोटोकॉपी / प्रिंट"],["cleaning","Cleaning & housekeeping","सफाई"],
+ ["repair","Repairs & maintenance","मरम्मत"],["water","Drinking water","पानी"],["govt","Govt / bank fees","सरकारी / बैंक शुल्क"],["misc","Other","अन्य"]];
+const CAT=Object.fromEntries(CATS.map(c=>[c[0],c]));
+const DEF={firm:"Office Petty Cash",float:5000,limit:500,billAbove:200,alert:1000,budget:0};
+const S={entries:[],funds:[],appr:{},cfg:{...DEF},db:null,user:null,assets:null,downloads:null,me:null,owner:false,ready:false,tab:"add",cat:"tea",bill:"yes",readonly:false};
+const $=id=>document.getElementById(id);
+const rs=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const ym=d=>d.slice(0,7);
+const monthName=m=>{const [y,mo]=m.split("-");return new Date(+y,+mo-1,1).toLocaleString("en-IN",{month:"long",year:"numeric"})};
+const fmtDate=d=>{const [y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
+const status=e=>(S.appr[e.id]&&S.appr[e.id].status)||"pending";
+const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!=null)n.textContent=txt;return n};
+
+$("eDate").value=today();$("fDate").value=today();
+// categories
+CATS.forEach(c=>{const b=el("button");b.type="button";b.dataset.cat=c[0];b.textContent=c[1]+" · "+c[2];b.setAttribute("aria-pressed",c[0]===S.cat);b.onclick=()=>{S.cat=c[0];$("cats").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.cat===S.cat));checkFlags()};$("cats").append(b)});
+$("billSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.bill=b.dataset.bill;$("billSeg").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.bill===S.bill));$("photoWrap").hidden=S.bill==="no";checkFlags()});
+$("eAmount").oninput=checkFlags;
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;renderTabs()});
+function renderTabs(){document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===S.tab));["add","register","summary","owner"].forEach(t=>$("tab-"+t).hidden=t!==S.tab)}
+
+function flagsFor(amount,bill){const f=[];const c=S.cfg;
+ if(c.limit>0&&amount>c.limit)f.push(["Above ₹"+c.limit.toLocaleString("en-IN")+" limit – needs sir's OK · सीमा से ज़्यादा","bad"]);
+ if(bill==="no"&&c.billAbove>0&&amount>c.billAbove)f.push(["No bill above ₹"+c.billAbove.toLocaleString("en-IN")+" · बिल ज़रूरी","bad"]);
+ else if(bill==="no")f.push(["Without bill · बिना बिल",""]);
+ return f}
+function checkFlags(){const a=+$("eAmount").value||0;const box=$("eFlags");box.replaceChildren();if(!a)return;
+ flagsFor(a,S.bill).forEach(([t,k])=>box.append(el("span","flag "+k,t)));
+ if(a>cash())box.append(el("span","flag bad","More than cash in hand · हाथ में नकद से ज़्यादा"))}
+
+function cash(){const f=S.funds.reduce((s,x)=>s+(+x.amount||0),0);const e=S.entries.filter(x=>status(x)!=="rejected").reduce((s,x)=>s+(+x.amount||0),0);return f-e}
+function months(){const set=new Set([ym(today())]);S.entries.forEach(e=>set.add(ym(e.date)));S.funds.forEach(f=>set.add(ym(f.date)));return [...set].sort().reverse()}
+function fillMonths(id){const sel=$(id);const cur=sel.value||ym(today());sel.replaceChildren();months().forEach(m=>{const o=el("option",null,monthName(m));o.value=m;sel.append(o)});sel.value=months().includes(cur)?cur:months()[0]}
+
+function render(){
+ const c=S.cfg;$("firmTitle").textContent=c.firm||DEF.firm;
+ const ch=cash();$("cashInHand").textContent=S.ready?rs(ch):"₹ —";
+ const m=ym(today());const mE=S.entries.filter(e=>ym(e.date)===m&&status(e)!=="rejected");
+ $("mSpent").textContent=rs(mE.reduce((s,e)=>s+(+e.amount||0),0));
+ $("mPending").textContent=S.entries.filter(e=>["pending","query"].includes(status(e))).length;
+ const pct=c.float>0?Math.max(0,Math.min(100,ch/c.float*100)):0;$("floatBar").style.width=pct+"%";
+ $("slipFoot").textContent="Imprest float "+rs(c.float)+" · top-up due "+rs(Math.max(0,c.float-ch));
+ // alerts
+ const al=$("alerts");al.replaceChildren();
+ if(S.ready&&ch<0)al.append(el("div","alert bad","Cash in hand is negative ("+rs(ch)+"). Entries exceed cash given – check the register."));
+ else if(S.ready&&c.alert>0&&ch<c.alert)al.append(el("div","alert","Low balance: "+rs(ch)+" left · नकद कम है, सर को बताएं"));
+ if(S.ready&&c.budget>0){const spent=mE.reduce((s,e)=>s+(+e.amount||0),0);if(spent>c.budget)al.append(el("div","alert bad","Monthly budget of "+rs(c.budget)+" crossed: "+rs(spent)+" spent in "+monthName(m)+"."));else if(spent>0.8*c.budget)al.append(el("div","alert",Math.round(spent/c.budget*100)+"% of monthly budget used."))}
+ const q=S.entries.filter(e=>status(e)==="query").length;if(q&&!S.owner)al.append(el("div","alert",q+" entr"+(q>1?"ies have":"y has")+" a question from sir · रजिस्टर देखें"));
+ // rules
+ const rl=$("rulesList");rl.replaceChildren();
+ [["Write every expense the same day, with the shop or person's name.","हर खर्च उसी दिन लिखें।"],
+  ["Take a bill for anything above "+rs(c.billAbove)+" and click its photo.",rs(c.billAbove)+" से ऊपर बिल ज़रूरी।"],
+  ["Ask before spending more than "+rs(c.limit)+" at one time.",rs(c.limit)+" से ज़्यादा खर्च से पहले पूछें।"],
+  ["Keep bills in the petty cash file in voucher number order.","बिल वाउचर नंबर से फ़ाइल में रखें।"],
+  ["Personal expenses are never paid from this cash.","निजी खर्च इस नकद से नहीं।"]].forEach(([e,h])=>{const li=el("li",null,e+" ");li.append(el("span","hi",h));rl.append(li)});
+ $("ownerTab").hidden=!S.owner;if(!S.owner&&S.tab==="owner")S.tab="add";
+ $("csvBtn").hidden=!S.downloads;
+ renderTabs();renderRegister();renderSummary();renderOwner();checkFlags();
+ $("saveExp").disabled=!S.ready||S.readonly;
+}
+
+function timeline(){const rows=[];S.funds.forEach(f=>rows.push({kind:"fund",...f}));S.entries.forEach(e=>rows.push({kind:"exp",...e}));
+ rows.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.createdAt||"")<(b.createdAt||"")?-1:1);let bal=0;
+ rows.forEach(r=>{if(r.kind==="fund")bal+=+r.amount||0;else if(status(r)!=="rejected")bal-=+r.amount||0;r.bal=bal});return rows}
+
+function renderRegister(){fillMonths("monthSel");const m=$("monthSel").value,f=$("statusSel").value;const all=timeline();
+ const before=all.filter(r=>ym(r.date)<m);const open=before.length?before[before.length-1].bal:0;
+ const op=$("opening");op.replaceChildren(el("span",null,"Opening balance · "+monthName(m)),el("b","num",rs(open)));
+ const list=all.filter(r=>ym(r.date)===m&&(f==="all"||(r.kind==="exp"&&status(r)===f))).reverse();
+ const L=$("ledger");L.replaceChildren();
+ if(!S.ready){L.append(Object.assign(el("div","empty"),{textContent:"Loading register…"}));return}
+ if(!list.length){const d=el("div","empty");d.append(el("b",null,"No entries for "+monthName(m)),document.createTextNode(S.funds.length?"Expenses saved from the Add expense tab appear here with a running balance.":"Start by recording the opening cash given to the peon, then add expenses."));L.append(d);return}
+ list.forEach(r=>L.append(r.kind==="fund"?fundItem(r):expItem(r)))}
+
+function fundItem(r){const it=el("div","item fund");const mn=el("div","main");mn.append(el("span","t","Cash received · नकद मिला"),el("span","meta",fmtDate(r.date)+(r.note?" · "+r.note:"")));
+ const a=el("div","amt","+"+rs(r.amount));a.append(el("span","bal","Bal "+rs(r.bal)));it.append(mn,a);
+ if(S.owner){const ac=el("div","actions");const d=el("button","linkbtn","Delete this receipt");d.onclick=()=>confirmDel(ac,()=>S.db.doc("funds/"+r.id).delete());ac.append(d);it.append(ac)}return it}
+
+function expItem(r){const st=status(r);const ap=S.appr[r.id]||{};const it=el("div","item "+st);const mn=el("div","main");const cat=CAT[r.category]||CAT.misc;
+ const t=el("span","t");t.append(document.createTextNode(cat[1]+(r.paidTo?" – "+r.paidTo:"")+" "));t.append(el("span","pill "+st,st));mn.append(t);
+ mn.append(el("span","meta",(r.voucher||"")+" · "+fmtDate(r.date)+(r.details?" · "+r.details:"")+(r.bill==="yes"?" · Bill ✓":" · No bill")));
+ const fl=flagsFor(+r.amount||0,r.bill);if(fl.length){const fb=el("div","flags");fl.forEach(([x,k])=>fb.append(el("span","flag "+k,x.split(" · ")[0])));mn.append(fb)}
+ if(r.billAsset){const b=el("button","linkbtn","View bill photo");b.onclick=()=>{$("viewerImg").src="https://drive.google.com/thumbnail?id="+r.billAsset+"&sz=w1600";$("viewer").hidden=false};mn.append(b)}
+ if(ap.note)mn.append(el("div","note","Sir: "+ap.note));
+ const a=el("div","amt","−"+rs(r.amount));a.append(el("span","bal","Bal "+rs(r.bal)));it.append(mn,a);
+ const ac=el("div","actions");
+ if(S.owner){const n=el("input");n.placeholder="Note / question (optional)";n.id="note-"+r.id;n.value=ap.note||"";
+  const mk=(lbl,cls,s)=>{const b=el("button","btn sm "+cls,lbl);b.onclick=async()=>{b.disabled=true;try{await S.db.doc("approvals/"+r.id).set({status:s,note:n.value.trim(),at:new Date().toISOString()})}catch(e){ac.append(el("span","err","Could not save: "+e.message))}b.disabled=false};return b};
+  if(st!=="approved")ac.append(mk("Approve","ok","approved"));if(st!=="rejected")ac.append(mk("Reject","bad","rejected"));if(st!=="query")ac.append(mk("Ask","warn","query"));ac.append(n)}
+ if(!S.readonly&&(st==="pending"||st==="query")&&(S.owner||r.createdBy===S.me)){const d=el("button","linkbtn","Delete entry");d.onclick=()=>confirmDel(ac,()=>S.db.doc("entries/"+r.id).delete());ac.append(d)}
+ if(ac.childNodes.length)it.append(ac);return it}
+
+function confirmDel(box,fn){const w=el("span","row");const y=el("button","btn sm bad","Yes, delete");const n=el("button","btn sm ghost","Keep");w.append(el("span","small","Delete for good?"),y,n);box.append(w);n.onclick=()=>w.remove();y.onclick=async()=>{y.disabled=true;try{await fn()}catch(e){w.replaceChildren(el("span","err","Could not delete: "+e.message))}}}
+
+function renderSummary(){fillMonths("monthSel2");const m=$("monthSel2").value;const es=S.entries.filter(e=>ym(e.date)===m);const live=es.filter(e=>status(e)!=="rejected");
+ const sum=a=>a.reduce((s,e)=>s+(+e.amount||0),0);const given=sum(S.funds.filter(f=>ym(f.date)===m));
+ const kv=$("sumKv");kv.replaceChildren();
+ [["Cash given",rs(given)],["Spent",rs(sum(live))],["Approved",rs(sum(es.filter(e=>status(e)==="approved")))],["Awaiting approval",rs(sum(es.filter(e=>["pending","query"].includes(status(e)))))],["Without bill",rs(sum(live.filter(e=>e.bill==="no")))],["Rejected",rs(sum(es.filter(e=>status(e)==="rejected")))]]
+  .forEach(([k,v])=>{const d=el("div");d.append(el("span",null,k),el("b",null,v));kv.append(d)});
+ const box=$("sumCats");box.replaceChildren();const by={};live.forEach(e=>by[e.category]=(by[e.category]||0)+(+e.amount||0));
+ const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);const max=rows.length?rows[0][1]:1;
+ if(!rows.length){const d=el("div","empty");d.append(el("b",null,"Nothing spent in "+monthName(m)),document.createTextNode("Category totals show here once expenses are added."));box.append(d);return}
+ rows.forEach(([k,v])=>{const c=CAT[k]||CAT.misc;const r=el("div","cat-row");const n=el("span");n.append(document.createTextNode(c[1]+" "),el("span","hi",c[2]));r.append(n,el("b","num",rs(v)));const t=el("div","track");const i=el("i");i.style.width=(v/max*100)+"%";t.append(i);r.append(t);box.append(r)})}
+
+function renderOwner(){if(!S.owner)return;const c=S.cfg;const due=Math.max(0,c.float-cash());
+ $("replenishHint").textContent=due>0?"To bring the float back to "+rs(c.float)+", give "+rs(due)+".":"Cash in hand is at or above the float.";
+ if(!$("fAmount").value&&due>0)$("fAmount").placeholder=String(Math.round(due));
+ const set=(id,v)=>{if(document.activeElement!==$(id))$(id).value=v};set("cFirm",c.firm);set("cFloat",c.float);set("cLimit",c.limit);set("cBill",c.billAbove);set("cAlert",c.alert);set("cBudget",c.budget)}
+
+$("monthSel").onchange=renderRegister;$("statusSel").onchange=renderRegister;$("monthSel2").onchange=renderSummary;
+$("closeViewer").onclick=()=>{$("viewer").hidden=true};
+
+async function compress(file){try{const bmp=await createImageBitmap(file);const k=Math.min(1,1400/Math.max(bmp.width,bmp.height));const cv=document.createElement("canvas");cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);return await new Promise(r=>cv.toBlob(b=>r(b||file),"image/jpeg",0.72))}catch(e){return file}}
+
+$("saveExp").onclick=async()=>{const msg=$("saveMsg");msg.className="";const amt=+$("eAmount").value;const date=$("eDate").value;
+ if(!date||!(amt>0)){msg.className="err";msg.textContent="Enter the date and an amount above ₹0 · तारीख और रकम भरें";return}
+ if(!$("ePaidTo").value.trim()){msg.className="err";msg.textContent="Write who was paid · किसको दिया लिखें";return}
+ const btn=$("saveExp");btn.disabled=true;msg.textContent="Saving…";
+ try{let billAsset=null;const f=$("ePhoto").files[0];
+  if(f&&S.bill==="yes"){if(!S.assets){msg.textContent="Photo upload isn't available here; saving without photo…"}else{const up=await S.assets.upload(await compress(f));billAsset=up.id}}
+  const m=ym(date).replace("-","").slice(2);const n=S.entries.filter(e=>(e.voucher||"").startsWith("PC-"+m)).length+1;
+  await S.db.collection("entries").add({date,category:S.cat,amount:Math.round(amt*100)/100,paidTo:$("ePaidTo").value.trim(),details:$("eDetails").value.trim(),bill:S.bill,billAsset,voucher:"PC-"+m+"-"+String(n).padStart(3,"0"),createdBy:S.me,createdAt:new Date().toISOString()});
+  ["eAmount","ePaidTo","eDetails","ePhoto"].forEach(id=>$(id).value="");msg.className="toast";msg.textContent="Saved · सेव हो गया";setTimeout(()=>{if(msg.textContent.startsWith("Saved"))msg.textContent=""},4000)}
+ catch(e){msg.className="err";msg.textContent=e.code==="invalid_argument"?"You don't have permission to add entries. Ask the owner to give you edit access.":"Could not save: "+(e.message||e.code)}
+ btn.disabled=false;checkFlags()};
+
+$("saveFund").onclick=async()=>{const a=+$("fAmount").value||+$("fAmount").placeholder;const msg=$("fundMsg");if(!(a>0)||!$("fDate").value){msg.className="err";msg.textContent="Enter a date and amount.";return}
+ try{await S.db.collection("funds").add({date:$("fDate").value,amount:a,note:$("fNote").value.trim(),createdAt:new Date().toISOString()});$("fAmount").value="";$("fNote").value="";msg.className="toast";msg.textContent="Recorded "+rs(a)}catch(e){msg.className="err";msg.textContent="Could not save: "+e.message}};
+
+$("saveCfg").onclick=async()=>{const msg=$("cfgMsg");const v=id=>Math.max(0,+$(id).value||0);
+ const cfg={firm:$("cFirm").value.trim()||DEF.firm,float:v("cFloat"),limit:v("cLimit"),billAbove:v("cBill"),alert:v("cAlert"),budget:v("cBudget")};
+ try{await S.db.doc("config/main").set(cfg);msg.className="toast";msg.textContent="Rules saved"}catch(e){msg.className="err";msg.textContent="Could not save: "+e.message}};
+
+$("csvBtn").onclick=async()=>{const m=$("monthSel2").value;const q=s=>'"'+String(s??"").replace(/"/g,'""')+'"';
+ const lines=[["Voucher","Date","Type","Category","Paid to","Details","Bill","Amount","Status","Note","Balance"].join(",")];
+ timeline().filter(r=>ym(r.date)===m).forEach(r=>{if(r.kind==="fund")lines.push([q(""),q(fmtDate(r.date)),q("Cash received"),q(""),q(""),q(r.note),q(""),r.amount,q(""),q(""),r.bal].join(","));
+  else{const c=CAT[r.category]||CAT.misc;lines.push([q(r.voucher),q(fmtDate(r.date)),q("Expense"),q(c[1]),q(r.paidTo),q(r.details),q(r.bill),-r.amount,q(status(r)),q((S.appr[r.id]||{}).note),r.bal].join(","))}});
+ try{await S.downloads.save({filename:"petty-cash-"+m+".csv",data:lines.join("\n")});$("csvMsg").textContent=""}catch(e){if(e.code!=="declined"){$("csvMsg").className="err small";$("csvMsg").textContent="Download failed: "+(e.message||e.code)}}};
+
+render();
+
+(async()=>{
+ const API="PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+ if(API.startsWith("PASTE")){$("who").textContent="Setup pending: add the Apps Script URL in index.html";return}
+ const call=async body=>{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});const j=await r.json();if(!j.ok){const e=new Error(j.error||"error");e.code=j.code||"error";throw e}return j};
+ let pin="";try{pin=localStorage.getItem("pcb_pin")||""}catch(e){}
+ let role=null,first=null;
+ for(let i=0;i<3&&!role;i++){
+  if(!pin)pin=(prompt("PIN daalein · Enter PIN")||"").trim();
+  if(!pin)break;
+  try{first=await call({action:"load",pin});role=first.role}
+  catch(e){if(e.code==="bad_pin"){pin="";try{localStorage.removeItem("pcb_pin")}catch(_){}}else{$("who").textContent="Connection problem: "+e.message;return}}
+ }
+ if(!role){$("who").textContent="Wrong PIN · page reload karein";return}
+ try{localStorage.setItem("pcb_pin",pin)}catch(e){}
+ let last="";
+ const apply=d=>{const k=JSON.stringify(d);if(k===last&&S.ready)return;last=k;S.entries=d.entries;S.funds=d.funds;S.appr=d.approvals;S.cfg={...DEF,...d.config};S.ready=true;render()};
+ const pull=async()=>{try{apply(await call({action:"load",pin}))}catch(e){$("who").textContent="Connection problem: "+(e.message||e.code)}};
+ const W=async(action,col,id,data)=>{const j=await call({action,pin,col,id,data});pull();return j};
+ S.db={collection:c=>({add:d=>W("add",c,null,d)}),doc:p=>{const[c,id]=p.split("/");return{set:d=>W("set",c,id,d),delete:()=>W("delete",c,id)}}};
+ S.assets={upload:async blob=>{const b64=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(String(f.result).split(",")[1]);f.readAsDataURL(blob)});const j=await call({action:"upload",pin,data:b64});return{id:j.id}}};
+ S.downloads={save:async({filename,data})=>{const u=URL.createObjectURL(new Blob(["\ufeff"+data],{type:"text/csv"}));const a=document.createElement("a");a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}};
+ S.owner=role==="owner";S.me=role;S.readonly=false;
+ $("who").textContent=S.owner?"Owner view · approve & give cash":"Peon view · add expenses";
+ apply(first);
+ setInterval(()=>{if(!document.hidden)pull()},8000);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)pull()});
+})();
+})();
+
+// PWA: service worker + install button
+(()=>{
+ if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+ const btn=document.getElementById("installBtn"),ios=document.getElementById("iosHint");
+ const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+ if(standalone)return;
+ let ev=null;
+ addEventListener("beforeinstallprompt",e=>{e.preventDefault();ev=e;btn.hidden=false});
+ btn.onclick=async()=>{if(!ev)return;ev.prompt();await ev.userChoice.catch(()=>{});ev=null;btn.hidden=true};
+ addEventListener("appinstalled",()=>{btn.hidden=true;ios.hidden=true});
+ if(/iphone|ipad|ipod/i.test(navigator.userAgent))ios.hidden=false;
+})();
+</script>
+
+</body></html>
